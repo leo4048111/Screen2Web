@@ -10,6 +10,7 @@ set(SCREEN2WEB_ROOT_DIR ${CMAKE_SOURCE_DIR})
 
 set(SRC_FILES
 ${SCREEN2WEB_ROOT_DIR}/src/main.cpp
+${SCREEN2WEB_ROOT_DIR}/src/window/window.cpp
 ${SCREEN2WEB_ROOT_DIR}/src/imgui_impl_sdl2.cpp
 ${SCREEN2WEB_ROOT_DIR}/src/imgui_impl_opengl3.cpp
 ${SCREEN2WEB_ROOT_DIR}/src/imgui/imgui.cpp
