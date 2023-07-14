@@ -62,7 +62,7 @@ add_executable(screen2web ${SRC_FILES})
 
 # platform link libs
 if (APPLE)
-    set(PLATFORM_LINK_LIBS ${SDL2_LIBRARIES} ${OpenCV_LIBRARIES} "-framework OpenGL")
+    set(PLATFORM_LINK_LIBS ${SDL2_LIBRARIES} ${OpenCV_LIBRARIES} "-framework OpenGL" "-framework CoreGraphics" "-framework ApplicationServices")
 else()
     set(PLATFORM_LINK_LIBS ${SDL2_LIBRARIES} ${OpenCV_LIBRARIES} OpenGL32)
 endif()

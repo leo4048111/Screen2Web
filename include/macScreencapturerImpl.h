@@ -1,6 +1,8 @@
 #pragma once
 #include "defines.h"
 
+#include <ApplicationServices/ApplicationServices.h>
+
 #include "screencapturer.h"
 
 _START_SCREEN2WEB_NM_
@@ -17,6 +19,9 @@ public:
     virtual ::cv::Mat CaptureOne() noexcept override;
 
     virtual void Release() noexcept override;
+
+private:
+    CFDictionaryRef windowInfo_;
 };
 
 _END_SCREEN2WEB_NM_
