@@ -55,7 +55,7 @@ bool WinScreenCapturer::Open(const ::std::string &windowName) noexcept
 
     HBITMAP hbwindow;
     hbwindow = CreateCompatibleBitmap(hwindowDC, width, height);
-    BITMAPINFOHEADER bi = ::CreateBitmapInfoHeader(hbwindow);
+    BITMAPINFOHEADER bi = CreateBitmapInfoHeader(hbwindow);
 
     // use the previously created device context with the bitmap
     SelectObject(hwindowCompatibleDC, hbwindow);
