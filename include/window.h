@@ -2,11 +2,11 @@
 
 #include "defines.h"
 
-#include <SDL.h>
+#include <SDL2/SDL.h>
 #if defined(IMGUI_IMPL_OPENGL_ES2)
-#include <SDL_opengles2.h>
+#include <SDL2/SDL_opengles2.h>
 #else
-#include <SDL_opengl.h>
+#include <SDL2/SDL_opengl.h>
 #endif
 
 _START_SCREEN2WEB_NM_
