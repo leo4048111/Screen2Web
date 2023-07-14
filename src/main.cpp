@@ -1,7 +1,7 @@
 #include "window.h"
 
 // Main code
-int main(int, char**)
+int main(int, char **)
 {
     int err = 0;
     err = SCREEN2WEB_NM::Window::GetInstance().Init();
