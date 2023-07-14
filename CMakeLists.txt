@@ -30,4 +30,11 @@ include_directories(${SDL2_INCLUDE_DIRS})
 
 add_executable(screen2web ${SRC_FILES})
 
-target_link_libraries(screen2web ${SDL2_LIBRARIES} OpenGL32)
+# platform link libs
+if (APPLE)
+    set(PLATFORM_LINK_LIBS ${SDL2_LIBRARIES} "-framework OpenGL")
+else()
+    set(PLATFORM_LINK_LIBS ${SDL2_LIBRARIES} OpenGL32)
+endif()
+
+target_link_libraries(screen2web ${PLATFORM_LINK_LIBS})
