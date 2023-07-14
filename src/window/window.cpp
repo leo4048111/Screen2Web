@@ -5,6 +5,8 @@
 #include "imgui_impl_opengl3.h"
 #include <stdio.h>
 
+#include "macScreencapturerImpl.h"
+
 _START_SCREEN2WEB_NM_
 
 int Window::Init() noexcept
@@ -97,6 +99,13 @@ int Window::Loop() noexcept
     ImGuiIO &io = ImGui::GetIO();
     (void)io;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    MacScreenCapturer capturer;
+    if (!capturer.Open("iTerm"))
+    {
+        std::cerr << "Failed to open screen capturer" << std::endl;
+        return -1;
+    }
+
     while (!done_)
     {
         // Poll and handle events (inputs, window resize, etc.)
@@ -120,9 +129,31 @@ int Window::Loop() noexcept
         ImGui::NewFrame();
 
         ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
-
+        // testing
+        ::cv::Mat image = capturer.CaptureOne();
+        ::cv::cvtColor(image, image, cv::COLOR_BGRA2BGR);
+        GLuint texture;
+        glGenTextures(1, &texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glTexParameteri(GL_TEXTURE_2D,
+                        GL_TEXTURE_MIN_FILTER,
+                        GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D,
+                        GL_TEXTURE_MAG_FILTER,
+                        GL_LINEAR);
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+        glTexImage2D(GL_TEXTURE_2D,
+                     0,
+                     GL_RGBA,
+                     image.cols,
+                     image.rows,
+                     0,
+                     GL_RGBA,
+                     GL_UNSIGNED_BYTE,
+                     image.data);
+        ImGui::Image((void *)(intptr_t)texture, ImVec2(image.cols, image.rows));
+        // testing end()
         ImGui::Text("This is some useful text."); // Display some text (you can use a format strings too)
-
         ImGui::End();
 
         // Rendering

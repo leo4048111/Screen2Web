@@ -22,6 +22,7 @@ public:
 
 private:
     CFDictionaryRef windowInfo_;
+    CGRect windowRect_;
 };
 
 _END_SCREEN2WEB_NM_
