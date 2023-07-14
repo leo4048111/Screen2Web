@@ -100,7 +100,7 @@ int Window::Loop() noexcept
     (void)io;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     MacScreenCapturer capturer;
-    if (!capturer.Open("iTerm"))
+    if (!capturer.Open("QQ"))
     {
         std::cerr << "Failed to open screen capturer" << std::endl;
         return -1;
@@ -131,7 +131,6 @@ int Window::Loop() noexcept
         ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
         // testing
         ::cv::Mat image = capturer.CaptureOne();
-        ::cv::cvtColor(image, image, cv::COLOR_BGRA2BGR);
         GLuint texture;
         glGenTextures(1, &texture);
         glBindTexture(GL_TEXTURE_2D, texture);
