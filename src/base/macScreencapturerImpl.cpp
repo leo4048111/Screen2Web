@@ -22,7 +22,6 @@ bool MacScreenCapturer::Open(const ::std::string &windowName) noexcept
         ::std::string windowOwnerNameStr;
         if (CFStringGetCString(windowOwnerNameRef, buffer, bufferSize, kCFStringEncodingUTF8))
             windowOwnerNameStr = ::std::string(buffer);
-        ::std::cout << windowOwnerNameStr << ::std::endl;
         if (windowOwnerNameStr == windowName)
         {
             CFDictionaryRef boundsString = (CFDictionaryRef)CFDictionaryGetValue(windowInfo_, kCGWindowBounds);
