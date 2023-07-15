@@ -1,5 +1,7 @@
 #include "window.h"
 
+#undef main
+
 // Main code
 int main(int, char **)
 {
