@@ -1,4 +1,4 @@
-#undef main
+#define SDL_MAIN_HANDLED
 
 #include "window.h"
 
