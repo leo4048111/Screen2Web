@@ -14,7 +14,7 @@ namespace
         bi.biSize = sizeof(BITMAPINFOHEADER);
         bi.biWidth = bmp.bmWidth;
         // negative height to ensure that the origin is at the top left corner of the returned bitmap
-        bi.biHeight = -bmp.bmHeight;
+        bi.biHeight = bmp.bmHeight;
         bi.biPlanes = 1;
         bi.biBitCount = bmp.bmBitsPixel;
         bi.biCompression = BI_RGB;
@@ -39,34 +39,120 @@ Frame WinScreenCapturer::CaptureOne() noexcept
 {
     assert(hwnd_);
 
-    // get handles to a DC
-    HDC hwindowDC, hwindowCompatibleDC;
-    hwindowDC = GetDC(hwnd_);
-    hwindowCompatibleDC = CreateCompatibleDC(hwindowDC);
-    SetStretchBltMode(hwindowCompatibleDC, COLORONCOLOR);
+    HDC hdcScreen;
+    HDC hdcWindow;
+    HDC hdcMemDC = NULL;
+    HBITMAP hbmScreen = NULL;
+    BITMAP bmpScreen;
+    DWORD dwBytesWritten = 0;
+    DWORD dwSizeofDIB = 0;
+    HANDLE hFile = NULL;
+    char* lpbitmap = NULL;
+    HANDLE hDIB = NULL;
+    DWORD dwBmpSize = 0;
+    Frame frame(0, 0, PixelFormat::UNKNOWN);
 
-    // define scale, height and width
-    int screenx = GetSystemMetrics(SM_XVIRTUALSCREEN);
-    int screeny = GetSystemMetrics(SM_YVIRTUALSCREEN);
-    int width = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-    int height = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+    // Retrieve the handle to a display device context for the client 
+    // area of the window. 
+    //hdcScreen = GetDC(NULL);
+    hdcWindow = GetDC(hwnd_);
 
-    HBITMAP hbwindow;
-    hbwindow = CreateCompatibleBitmap(hwindowDC, width, height);
-    BITMAPINFOHEADER bi = CreateBitmapInfoHeader(hbwindow);
+    // Create a compatible DC, which is used in a BitBlt from the window DC.
+    hdcMemDC = CreateCompatibleDC(hdcWindow);
 
-    // use the previously created device context with the bitmap
-    SelectObject(hwindowCompatibleDC, hbwindow);
+    if (!hdcMemDC)
+    {
+        goto done;
+    }
 
-    // copy from the window device context to the bitmap device context
-    Frame frame(width, height, PixelFormat::RGB);
-    StretchBlt(hwindowCompatibleDC, 0, 0, width, height, hwindowDC, screenx, screeny, width, height, SRCCOPY); // change SRCCOPY to NOTSRCCOPY for wacky colors !
-    GetDIBits(hwindowCompatibleDC, hbwindow, 0, height, frame.data, (BITMAPINFO *)&bi, DIB_RGB_COLORS);          // copy from hwindowCompatibleDC to hbwindow
+    // Get the client area for size calculation.
+    RECT rcClient;
+    GetClientRect(hwnd_, &rcClient);
 
-    // avoid memory leak
-    DeleteObject(hbwindow);
-    DeleteDC(hwindowCompatibleDC);
-    ReleaseDC(hwnd_, hwindowDC);
+    //// This is the best stretch mode.
+    //SetStretchBltMode(hdcWindow, HALFTONE);
+
+    //// The source DC is the entire screen, and the destination DC is the current window (HWND).
+    //if (!StretchBlt(hdcWindow,
+    //    0, 0,
+    //    rcClient.right, rcClient.bottom,
+    //    hdcScreen,
+    //    0, 0,
+    //    GetSystemMetrics(SM_CXSCREEN),
+    //    GetSystemMetrics(SM_CYSCREEN),
+    //    SRCCOPY))
+    //{
+    //    LOG("StretchBlt has failed");
+    //    goto done;
+    //}
+
+    // Create a compatible bitmap from the Window DC.
+    hbmScreen = CreateCompatibleBitmap(hdcWindow, rcClient.right - rcClient.left, rcClient.bottom - rcClient.top);
+
+    if (!hbmScreen)
+    {
+        goto done;
+    }
+
+    // Select the compatible bitmap into the compatible memory DC.
+    SelectObject(hdcMemDC, hbmScreen);
+
+    // Bit block transfer into our compatible memory DC.
+    if (!BitBlt(hdcMemDC,
+        0, 0,
+        rcClient.right - rcClient.left, rcClient.bottom - rcClient.top,
+        hdcWindow,
+        0, 0,
+        SRCCOPY))
+    {
+        goto done;
+    }
+
+    // Get the BITMAP from the HBITMAP.
+    GetObject(hbmScreen, sizeof(BITMAP), &bmpScreen);
+
+    BITMAPFILEHEADER   bmfHeader;
+    BITMAPINFOHEADER   bi;
+
+    bi.biSize = sizeof(BITMAPINFOHEADER);
+    bi.biWidth = bmpScreen.bmWidth;
+    bi.biHeight = bmpScreen.bmHeight;
+    bi.biPlanes = 1;
+    bi.biBitCount = 32;
+    bi.biCompression = BI_RGB;
+    bi.biSizeImage = 0;
+    bi.biXPelsPerMeter = 0;
+    bi.biYPelsPerMeter = 0;
+    bi.biClrUsed = 0;
+    bi.biClrImportant = 0;
+
+    dwBmpSize = ((bmpScreen.bmWidth * bi.biBitCount + 31) / 32) * 4 * bmpScreen.bmHeight;
+
+
+    // Starting with 32-bit Windows, GlobalAlloc and LocalAlloc are implemented as wrapper functions that 
+    // call HeapAlloc using a handle to the process's default heap. Therefore, GlobalAlloc and LocalAlloc 
+    // have greater overhead than HeapAlloc.
+    hDIB = GlobalAlloc(GHND, dwBmpSize);
+    lpbitmap = (char*)GlobalLock(hDIB);
+
+    // Gets the "bits" from the bitmap, and copies them into a buffer 
+    // that's pointed to by lpbitmap.
+    frame = Frame(bi.biWidth, bi.biHeight, PixelFormat::RGBA);
+    GetDIBits(hdcWindow, hbmScreen, 0,
+        (UINT)bmpScreen.bmHeight,
+        frame.data,
+        (BITMAPINFO*)&bi, DIB_RGB_COLORS);
+
+    // Unlock and Free the DIB from the heap.
+    GlobalUnlock(hDIB);
+    GlobalFree(hDIB);
+
+    // Clean up.
+done:
+    DeleteObject(hbmScreen);
+    DeleteObject(hdcMemDC);
+    //ReleaseDC(NULL, hdcScreen);
+    ReleaseDC(hwnd_, hdcWindow);
 
     return frame;
 }
