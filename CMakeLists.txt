@@ -10,7 +10,6 @@ set(SCREEN2WEB_ROOT_DIR ${CMAKE_SOURCE_DIR})
 
 set(SRC_FILES
 ${SCREEN2WEB_ROOT_DIR}/src/main.cpp
-${SCREEN2WEB_ROOT_DIR}/src/base/screencapturer.cpp
 ${SCREEN2WEB_ROOT_DIR}/src/window/window.cpp
 ${SCREEN2WEB_ROOT_DIR}/src/imgui_impl_sdl2.cpp
 ${SCREEN2WEB_ROOT_DIR}/src/imgui_impl_opengl3.cpp
@@ -40,14 +39,14 @@ endif()
 
 include_directories(${SDL2_INCLUDE_DIRS})
 
-# Opencv2
-find_package(OpenCV REQUIRED)
+# # Opencv2
+# find_package(OpenCV REQUIRED)
 
-if (NOT OpenCV_FOUND)
-    message(FATAL_ERROR "OpenCV not found")
-endif()
+# if (NOT OpenCV_FOUND)
+#     message(FATAL_ERROR "OpenCV not found")
+# endif()
 
-include_directories(${OpenCV_INCLUDE_DIRS})
+# include_directories(${OpenCV_INCLUDE_DIRS})
 
 # # screen share lite
 # find_package(screen_capture_lite_shared REQUIRED)
@@ -62,11 +61,11 @@ add_executable(screen2web ${SRC_FILES})
 
 # platform link libs
 if (APPLE)
-    set(PLATFORM_LINK_LIBS ${SDL2_LIBRARIES} ${OpenCV_LIBRARIES} "-framework OpenGL" "-framework CoreGraphics" "-framework ApplicationServices")
+    set(PLATFORM_LINK_LIBS ${SDL2_LIBRARIES} "-framework OpenGL" "-framework CoreGraphics" "-framework ApplicationServices")
 elseif(WIN32)
-    set(PLATFORM_LINK_LIBS ${SDL2_LIBRARIES} ${OpenCV_LIBRARIES} OpenGL32 user32)
+    set(PLATFORM_LINK_LIBS ${SDL2_LIBRARIES} OpenGL32 user32)
 else()
-    set(PLATFORM_LINK_LIBS ${SDL2_LIBRARIES} ${OpenCV_LIBRARIES} OpenGL32)
+    set(PLATFORM_LINK_LIBS ${SDL2_LIBRARIES} OpenGL32)
 endif()
 
 target_link_libraries(screen2web ${PLATFORM_LINK_LIBS})
