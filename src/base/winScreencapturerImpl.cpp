@@ -37,6 +37,8 @@ bool WinScreenCapturer::Open(const ::std::string &windowName) noexcept
 
 ::cv::Mat WinScreenCapturer::CaptureOne() noexcept
 {
+    assert(hwnd);
+
     ::cv::Mat mat;
 
     // get handles to a DC

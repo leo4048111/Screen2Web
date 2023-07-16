@@ -2,6 +2,8 @@
 
 #include "defines.h"
 
+#include <string>
+
 #include <SDL2/SDL.h>
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <SDL2/SDL_opengles2.h>
@@ -26,6 +28,7 @@ private:
     bool done_{false};
     SDL_Window *window_{nullptr};
     SDL_GLContext gl_context_{nullptr};
+
 };
 
 _END_SCREEN2WEB_NM_
