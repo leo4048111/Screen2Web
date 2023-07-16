@@ -124,7 +124,7 @@ int Window::Loop() noexcept
         ImGui::NewFrame();
 
         ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
-
+        ShowCapturedWindow();
         ImGui::End();
 
         // Rendering
@@ -158,35 +158,35 @@ void Window::ShowCapturedWindow() noexcept
     {
 #if defined(WIN32)
         capturer_ = ::std::make_unique<WinScreenCapturer>();
-        capturer_->Open("Github Desktop");
+        capturer_->Open("Screen2Web");
 #elif defined(__APPLE__)
         capturer_ = ::std::make_unique<MacScreenCapturer>();
 #endif
+    }
 
-        if (capturer_)
-        {
-            Frame frame = capturer_->CaptureOne();
-            GLuint texture;
-            glGenTextures(1, &texture);
-            glBindTexture(GL_TEXTURE_2D, texture);
-            glTexParameteri(GL_TEXTURE_2D,
-                            GL_TEXTURE_MIN_FILTER,
-                            GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D,
-                            GL_TEXTURE_MAG_FILTER,
-                            GL_LINEAR);
-            glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-            glTexImage2D(GL_TEXTURE_2D,
-                         0,
-                         GL_RGBA,
-                         frame.width,
-                         frame.height,
-                         0,
-                         GL_RGBA,
-                         GL_UNSIGNED_BYTE,
-                         frame.data);
-            ImGui::Image((void *)(intptr_t)texture, ImVec2(frame.width, frame.height));
-        }
+    if (capturer_)
+    {
+        Frame frame = capturer_->CaptureOne();
+        GLuint texture;
+        glGenTextures(1, &texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glTexParameteri(GL_TEXTURE_2D,
+            GL_TEXTURE_MIN_FILTER,
+            GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D,
+            GL_TEXTURE_MAG_FILTER,
+            GL_LINEAR);
+        // glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+        glTexImage2D(GL_TEXTURE_2D,
+            0,
+            GL_RGBA,
+            frame.width,
+            frame.height,
+            0,
+            GL_RGBA,
+            GL_UNSIGNED_BYTE,
+            frame.data);
+        ImGui::Image((void*)(intptr_t)texture, ImVec2(frame.width, frame.height));
     }
 }
 
