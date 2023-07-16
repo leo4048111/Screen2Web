@@ -87,7 +87,10 @@ Frame WinScreenCapturer::CaptureOne() noexcept
     //}
 
     // Create a compatible bitmap from the Window DC.
-    hbmScreen = CreateCompatibleBitmap(hdcWindow, rcClient.right - rcClient.left, rcClient.bottom - rcClient.top);
+    int width = rcClient.right - rcClient.left;
+    int height = rcClient.bottom - rcClient.top;
+
+    hbmScreen = CreateCompatibleBitmap(hdcWindow, width, height);
 
     if (!hbmScreen)
     {
@@ -98,11 +101,12 @@ Frame WinScreenCapturer::CaptureOne() noexcept
     SelectObject(hdcMemDC, hbmScreen);
 
     // Bit block transfer into our compatible memory DC.
-    if (!BitBlt(hdcMemDC,
+    if (!StretchBlt(hdcMemDC,
         0, 0,
-        rcClient.right - rcClient.left, rcClient.bottom - rcClient.top,
+        width, height,
         hdcWindow,
         0, 0,
+        width, height,
         SRCCOPY))
     {
         goto done;
@@ -137,7 +141,9 @@ Frame WinScreenCapturer::CaptureOne() noexcept
 
     // Gets the "bits" from the bitmap, and copies them into a buffer 
     // that's pointed to by lpbitmap.
-    frame = Frame(bi.biWidth, bi.biHeight, PixelFormat::RGBA);
+    // frame = Frame(bi.biWidth, bi.biHeight, PixelFormat::RGBA);
+    frame = Frame(width, height, PixelFormat::RGBA);
+
     GetDIBits(hdcWindow, hbmScreen, 0,
         (UINT)bmpScreen.bmHeight,
         frame.data,

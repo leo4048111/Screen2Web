@@ -123,7 +123,9 @@ int Window::Loop() noexcept
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(1.0f, 1.0f, 1.0f, 1.0f)); // 将窗口背景颜色设置为纯白色
         ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
+        ImGui::PopStyleColor(); // 恢复样式设置
         ShowCapturedWindow();
         ImGui::End();
 
@@ -158,7 +160,7 @@ void Window::ShowCapturedWindow() noexcept
     {
 #if defined(WIN32)
         capturer_ = ::std::make_unique<WinScreenCapturer>();
-        capturer_->Open("Screen2Web");
+        capturer_->Open("Shortcuts");
 #elif defined(__APPLE__)
         capturer_ = ::std::make_unique<MacScreenCapturer>();
 #endif
@@ -177,16 +179,18 @@ void Window::ShowCapturedWindow() noexcept
             GL_TEXTURE_MAG_FILTER,
             GL_LINEAR);
         // glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexImage2D(GL_TEXTURE_2D,
             0,
             GL_RGBA,
             frame.width,
             frame.height,
             0,
-            GL_RGBA,
+            GL_BGRA,
             GL_UNSIGNED_BYTE,
             frame.data);
-        ImGui::Image((void*)(intptr_t)texture, ImVec2(frame.width, frame.height));
+        ImGui::Image((void*)(intptr_t)texture, ImVec2(frame.width, frame.height), ImVec2(0, 1), ImVec2(1, 0));
     }
 }
 
