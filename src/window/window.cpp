@@ -5,6 +5,12 @@
 #include "imgui_impl_opengl3.h"
 #include <stdio.h>
 
+#if defined(WIN32)
+#include "winScreencapturerImpl.h"
+#elif defined(__APPLE__)
+#include "macScreencapturerImpl.h"
+#endif
+
 // #include "macScreencapturerImpl.h"
 
 _START_SCREEN2WEB_NM_
@@ -52,7 +58,7 @@ int Window::Init() noexcept
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-    window_ = SDL_CreateWindow("Screen2Web", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
+    window_ = SDL_CreateWindow(window_name_.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
     gl_context_ = SDL_GL_CreateContext(window_);
     SDL_GL_MakeCurrent(window_, gl_context_);
     SDL_GL_SetSwapInterval(1); // Enable vsync
@@ -102,11 +108,6 @@ int Window::Loop() noexcept
 
     while (!done_)
     {
-        // Poll and handle events (inputs, window resize, etc.)
-        // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
-        // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application, or clear/overwrite your copy of the mouse data.
-        // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application, or clear/overwrite your copy of the keyboard data.
-        // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
@@ -123,30 +124,7 @@ int Window::Loop() noexcept
         ImGui::NewFrame();
 
         ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
-        // testing
-        // ::cv::Mat image = capturer.CaptureOne();
-        // GLuint texture;
-        // glGenTextures(1, &texture);
-        // glBindTexture(GL_TEXTURE_2D, texture);
-        // glTexParameteri(GL_TEXTURE_2D,
-        //                 GL_TEXTURE_MIN_FILTER,
-        //                 GL_LINEAR);
-        // glTexParameteri(GL_TEXTURE_2D,
-        //                 GL_TEXTURE_MAG_FILTER,
-        //                 GL_LINEAR);
-        // glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-        // glTexImage2D(GL_TEXTURE_2D,
-        //              0,
-        //              GL_RGBA,
-        //              image.cols,
-        //              image.rows,
-        //              0,
-        //              GL_RGBA,
-        //              GL_UNSIGNED_BYTE,
-        //              image.data);
-        // ImGui::Image((void *)(intptr_t)texture, ImVec2(image.cols, image.rows));
-        // testing end()
-        ImGui::Text("This is some useful text."); // Display some text (you can use a format strings too)
+
         ImGui::End();
 
         // Rendering
@@ -172,6 +150,44 @@ int Window::DeInit() noexcept
     SDL_DestroyWindow(window_);
     SDL_Quit();
     return 0;
+}
+
+void Window::ShowCapturedWindow() noexcept
+{
+    if (capturer_ == nullptr)
+    {
+#if defined(WIN32)
+        capturer_ = ::std::make_unique<WinScreenCapturer>();
+        capturer_->Open("Github Desktop");
+#elif defined(__APPLE__)
+        capturer_ = ::std::make_unique<MacScreenCapturer>();
+#endif
+
+        if (capturer_)
+        {
+            Frame frame = capturer_->CaptureOne();
+            GLuint texture;
+            glGenTextures(1, &texture);
+            glBindTexture(GL_TEXTURE_2D, texture);
+            glTexParameteri(GL_TEXTURE_2D,
+                            GL_TEXTURE_MIN_FILTER,
+                            GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D,
+                            GL_TEXTURE_MAG_FILTER,
+                            GL_LINEAR);
+            glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+            glTexImage2D(GL_TEXTURE_2D,
+                         0,
+                         GL_RGBA,
+                         frame.width,
+                         frame.height,
+                         0,
+                         GL_RGBA,
+                         GL_UNSIGNED_BYTE,
+                         frame.data);
+            ImGui::Image((void *)(intptr_t)texture, ImVec2(frame.width, frame.height));
+        }
+    }
 }
 
 _END_SCREEN2WEB_NM_

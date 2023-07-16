@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cassert>
+
 #define SCREEN2WEB_NM screen2web
 
 #define _START_SCREEN2WEB_NM_ \

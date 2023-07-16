@@ -35,11 +35,9 @@ bool WinScreenCapturer::Open(const ::std::string &windowName) noexcept
     return hwnd_ != nullptr;
 }
 
-::cv::Mat WinScreenCapturer::CaptureOne() noexcept
+Frame WinScreenCapturer::CaptureOne() noexcept
 {
-    assert(hwnd);
-
-    ::cv::Mat mat;
+    assert(hwnd_);
 
     // get handles to a DC
     HDC hwindowDC, hwindowCompatibleDC;
@@ -53,8 +51,6 @@ bool WinScreenCapturer::Open(const ::std::string &windowName) noexcept
     int width = GetSystemMetrics(SM_CXVIRTUALSCREEN);
     int height = GetSystemMetrics(SM_CYVIRTUALSCREEN);
 
-    mat.create(height, width, CV_8UC4);
-
     HBITMAP hbwindow;
     hbwindow = CreateCompatibleBitmap(hwindowDC, width, height);
     BITMAPINFOHEADER bi = CreateBitmapInfoHeader(hbwindow);
@@ -63,15 +59,16 @@ bool WinScreenCapturer::Open(const ::std::string &windowName) noexcept
     SelectObject(hwindowCompatibleDC, hbwindow);
 
     // copy from the window device context to the bitmap device context
+    Frame frame(width, height, PixelFormat::RGB);
     StretchBlt(hwindowCompatibleDC, 0, 0, width, height, hwindowDC, screenx, screeny, width, height, SRCCOPY); // change SRCCOPY to NOTSRCCOPY for wacky colors !
-    GetDIBits(hwindowCompatibleDC, hbwindow, 0, height, mat.data, (BITMAPINFO *)&bi, DIB_RGB_COLORS);          // copy from hwindowCompatibleDC to hbwindow
+    GetDIBits(hwindowCompatibleDC, hbwindow, 0, height, frame.data, (BITMAPINFO *)&bi, DIB_RGB_COLORS);          // copy from hwindowCompatibleDC to hbwindow
 
     // avoid memory leak
     DeleteObject(hbwindow);
     DeleteDC(hwindowCompatibleDC);
     ReleaseDC(hwnd_, hwindowDC);
 
-    return mat;
+    return frame;
 }
 
 void WinScreenCapturer::Release() noexcept

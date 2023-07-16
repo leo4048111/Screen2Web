@@ -34,7 +34,7 @@ bool MacScreenCapturer::Open(const ::std::string &windowName) noexcept
     return found;
 }
 
-::cv::Mat MacScreenCapturer::CaptureOne() noexcept
+Frame MacScreenCapturer::CaptureOne() noexcept
 {
     assert(!CGRectIsNull(windowRect_));
 

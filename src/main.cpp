@@ -1,6 +1,6 @@
-#include "window.h"
-
 #undef main
+
+#include "window.h"
 
 // Main code
 int main(int, char **)

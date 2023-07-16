@@ -4,6 +4,7 @@
 #include <Windows.h>
 
 #include "screencapturer.h"
+#include "frame.h"
 
 _START_SCREEN2WEB_NM_
 
@@ -16,7 +17,7 @@ public:
 public:
     virtual bool Open(const ::std::string &windowName) noexcept override;
 
-    virtual ::cv::Mat CaptureOne() noexcept override;
+    virtual Frame CaptureOne() noexcept override;
 
     virtual void Release() noexcept override;
 
