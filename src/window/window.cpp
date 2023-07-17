@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 #if defined(WIN32)
-#include "winScreencapturerImpl.h"
+#include "winSDIScreencapturerImpl.h"
 #elif defined(__APPLE__)
 #include "macScreencapturerImpl.h"
 #endif
@@ -123,9 +123,9 @@ int Window::Loop() noexcept
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
-        ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(1.0f, 1.0f, 1.0f, 1.0f)); // ½«´°¿Ú±³¾°ÑÕÉ«ÉèÖÃÎª´¿°×É«
-        ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
-        ImGui::PopStyleColor(); // »Ö¸´ÑùÊ½ÉèÖÃ
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(1.0f, 1.0f, 1.0f, 1.0f)); // ï¿½ï¿½ï¿½ï¿½ï¿½Ú±ï¿½ï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½É«
+        ImGui::Begin("Hello, world!");                                            // Create a window called "Hello, world!" and append into it.
+        ImGui::PopStyleColor();                                                   // ï¿½Ö¸ï¿½ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½
         ShowCapturedWindow();
         ImGui::End();
 
@@ -159,7 +159,7 @@ void Window::ShowCapturedWindow() noexcept
     if (capturer_ == nullptr)
     {
 #if defined(WIN32)
-        capturer_ = ::std::make_unique<WinScreenCapturer>();
+        capturer_ = ::std::make_unique<WinSDIScreenCapturer>();
         capturer_->Open("Shortcuts");
 #elif defined(__APPLE__)
         capturer_ = ::std::make_unique<MacScreenCapturer>();
@@ -173,24 +173,24 @@ void Window::ShowCapturedWindow() noexcept
         glGenTextures(1, &texture);
         glBindTexture(GL_TEXTURE_2D, texture);
         glTexParameteri(GL_TEXTURE_2D,
-            GL_TEXTURE_MIN_FILTER,
-            GL_LINEAR);
+                        GL_TEXTURE_MIN_FILTER,
+                        GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D,
-            GL_TEXTURE_MAG_FILTER,
-            GL_LINEAR);
+                        GL_TEXTURE_MAG_FILTER,
+                        GL_LINEAR);
         // glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexImage2D(GL_TEXTURE_2D,
-            0,
-            GL_RGBA,
-            frame.width,
-            frame.height,
-            0,
-            GL_BGRA,
-            GL_UNSIGNED_BYTE,
-            frame.data);
-        ImGui::Image((void*)(intptr_t)texture, ImVec2(frame.width, frame.height), ImVec2(0, 1), ImVec2(1, 0));
+                     0,
+                     GL_RGBA,
+                     frame.width,
+                     frame.height,
+                     0,
+                     GL_BGRA,
+                     GL_UNSIGNED_BYTE,
+                     frame.data);
+        ImGui::Image((void *)(intptr_t)texture, ImVec2(frame.width, frame.height), ImVec2(0, 1), ImVec2(1, 0));
     }
 }
 

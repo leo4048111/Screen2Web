@@ -8,7 +8,7 @@
 
 _START_SCREEN2WEB_NM_
 
-class WinScreenCapturer : public ScreenCapturer
+class WinSDIScreenCapturer : public ScreenCapturer
 {
 public:
     WinScreenCapturer() = default;

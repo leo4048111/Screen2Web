@@ -25,7 +25,7 @@ ${SCREEN2WEB_ROOT_DIR}/src/imgui/imgui_demo.cpp
 if(APPLE)
     set(SRC_FILES ${SRC_FILES} ${SCREEN2WEB_ROOT_DIR}/src/base/macScreencapturerImpl.cpp)
 elseif(WIN32)
-    set(SRC_FILES ${SRC_FILES} ${SCREEN2WEB_ROOT_DIR}/src/base/winScreencapturerImpl.cpp)
+    set(SRC_FILES ${SRC_FILES} ${SCREEN2WEB_ROOT_DIR}/src/base/winSDIScreencapturerImpl.cpp)
 # else()
 #     set(SRC_FILES ${SRC_FILES} ${SCREEN2WEB_ROOT_DIR}/src/base/linuxScreencapturerImpl.cpp)
 endif()
