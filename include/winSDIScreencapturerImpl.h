@@ -11,8 +11,8 @@ _START_SCREEN2WEB_NM_
 class WinSDIScreenCapturer : public ScreenCapturer
 {
 public:
-    WinScreenCapturer() = default;
-    ~WinScreenCapturer() = default;
+    WinSDIScreenCapturer() = default;
+    ~WinSDIScreenCapturer();
 
 public:
     virtual bool Open(const ::std::string &windowName) noexcept override;

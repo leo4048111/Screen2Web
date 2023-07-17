@@ -28,6 +28,11 @@ namespace
     }
 }
 
+WinSDIScreenCapturer::~WinSDIScreenCapturer()
+{
+    this->Release();
+}
+
 bool WinSDIScreenCapturer::Open(const ::std::string &windowName) noexcept
 {
     hwnd_ = FindWindow(nullptr, windowName.c_str());

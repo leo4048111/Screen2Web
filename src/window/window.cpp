@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 #if defined(WIN32)
-#include "winSDIScreencapturerImpl.h"
+#include "winDXGIScreencapturerImpl.h"
 #elif defined(__APPLE__)
 #include "macScreencapturerImpl.h"
 #endif
@@ -159,8 +159,8 @@ void Window::ShowCapturedWindow() noexcept
     if (capturer_ == nullptr)
     {
 #if defined(WIN32)
-        capturer_ = ::std::make_unique<WinSDIScreenCapturer>();
-        capturer_->Open("Shortcuts");
+        capturer_ = ::std::make_unique<WinDXGIScreenCapturer>();
+        capturer_->Open("Github Desktop");
 #elif defined(__APPLE__)
         capturer_ = ::std::make_unique<MacScreenCapturer>();
 #endif
