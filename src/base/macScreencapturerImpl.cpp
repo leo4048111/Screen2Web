@@ -2,6 +2,13 @@
 
 _START_SCREEN2WEB_NM_
 
+::std::vector<::std::string> MacScreenCapturer::GetAllWindowNames() noexcept
+{
+    ::std::vector<std::string> windowNames;
+
+    return windowNames;
+}
+
 bool MacScreenCapturer::Open(const ::std::string &windowName) noexcept
 {
     auto windowList = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly | kCGWindowListExcludeDesktopElements, kCGNullWindowID);
@@ -60,11 +67,9 @@ Frame MacScreenCapturer::CaptureOne() noexcept
     CGContextDrawImage(ctx, windowRect_, imageRef);
     CGImageRelease(imageRef);
 
-    // bitmap ctx to ::cv::Mat
-    ::cv::Mat mat(windowRect_.size.height, windowRect_.size.width, CV_8UC4, CGBitmapContextGetData(ctx), 4 * windowRect_.size.width);
-    CGContextRelease(ctx);
+    Frame frame;
 
-    return mat;
+    return frame;
 }
 
 void MacScreenCapturer::Release() noexcept

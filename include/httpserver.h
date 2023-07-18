@@ -5,7 +5,7 @@
 #include <queue>
 #include <mutex>
 
-#include <httplib.h>
+#include "httplib.h"
 
 #include "frame.h"
 
@@ -18,11 +18,11 @@ class HttpServer
 public:
     int Init() noexcept;
 
-    int Listen(const ::std::string& host, int port, int socket_flags = 0) noexcept;
+    int Listen(const ::std::string &host, int port, int socket_flags = 0) noexcept;
 
     int CleanUp() noexcept;
 
-    void PushFrame(const Frame& frame) noexcept;
+    void PushFrame(const Frame &frame) noexcept;
 
 private:
     ::httplib::Server server_;

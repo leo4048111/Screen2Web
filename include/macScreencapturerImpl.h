@@ -1,6 +1,8 @@
 #pragma once
 #include "defines.h"
 
+#include <string>
+#include <vector>
 #include <ApplicationServices/ApplicationServices.h>
 
 #include "screencapturer.h"
@@ -15,6 +17,8 @@ public:
     ~MacScreenCapturer() = default;
 
 public:
+    ::std::vector<::std::string> GetAllWindowNames() noexcept override;
+
     virtual bool Open(const ::std::string &windowName) noexcept override;
 
     virtual Frame CaptureOne() noexcept override;
