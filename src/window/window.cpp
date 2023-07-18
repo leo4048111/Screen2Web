@@ -125,6 +125,7 @@ int Window::Loop() noexcept
 {
     ImGuiIO &io = ImGui::GetIO();
     (void)io;
+    io.WantSaveIniSettings = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     while (!done_)
