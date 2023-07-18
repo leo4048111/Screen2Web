@@ -29,21 +29,21 @@ int Window::Init() noexcept
     // Decide GL+GLSL versions
 #if defined(IMGUI_IMPL_OPENGL_ES2)
     // GL ES 2.0 + GLSL 100
-    const char *glsl_version = "#version 100";
+    const char* glsl_version = "#version 100";
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 #elif defined(__APPLE__)
     // GL 3.2 Core + GLSL 150
-    const char *glsl_version = "#version 150";
+    const char* glsl_version = "#version 150";
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG); // Always required on Mac
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 #else
     // GL 3.0 + GLSL 130
-    const char *glsl_version = "#version 130";
+    const char* glsl_version = "#version 130";
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -68,7 +68,7 @@ int Window::Init() noexcept
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO &io = ImGui::GetIO();
+    ImGuiIO& io = ImGui::GetIO();
     (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
@@ -99,6 +99,24 @@ int Window::Init() noexcept
     // IM_ASSERT(font != nullptr);
 
     done_ = false;
+
+    get_windows_t_ = ::std::thread([&]()
+        {
+            while (!done_)
+            {
+                if (capturer_)
+                {
+                    auto x = capturer_->GetAllWindowNames();
+                    {
+                        ::std::lock_guard<::std::mutex> lock(window_mutex_);
+                        windownames_ = x;
+                    }
+                }
+                ::std::this_thread::sleep_for(::std::chrono::milliseconds(5000));
+            } });
+
+    get_windows_t_.detach();
+
     return 0;
 }
 
@@ -120,9 +138,9 @@ int Window::Loop() noexcept
                 done_ = true;
             if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_RESIZED && event.window.windowID == SDL_GetWindowID(window_)) // handle resize
             {
-				window_width_ = event.window.data1;
-				window_height_ = event.window.data2;
-			}
+                window_width_ = event.window.data1;
+                window_height_ = event.window.data2;
+            }
         }
 
         // Start the Dear ImGui frame
@@ -133,7 +151,11 @@ int Window::Loop() noexcept
         ImGui::SetNextWindowSize(ImVec2(window_width_, window_height_), 0);
         ImGui::SetNextWindowPos(ImVec2(0, 0));
         ImGui::Begin("Screen2Web preview", nullptr, ImGuiWindowFlags_NoCollapse); // Create a window called "Hello, world!" and append into it.
-        ShowCapturedWindow();
+        if(CheckCapturer())
+        {
+            ShowConfigWindow();
+            ShowCapturedWindow();
+        }
         ImGui::End();
 
         // Rendering
@@ -143,6 +165,9 @@ int Window::Loop() noexcept
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         SDL_GL_SwapWindow(window_);
+
+        // cleanup
+        glDeleteTextures(1, &captured_window_texture_);
     }
 
     return 0;
@@ -158,10 +183,12 @@ int Window::DeInit() noexcept
     SDL_GL_DeleteContext(gl_context_);
     SDL_DestroyWindow(window_);
     SDL_Quit();
+
+    get_windows_t_.join();
     return 0;
 }
 
-void Window::ShowCapturedWindow() noexcept
+bool Window::CheckCapturer() noexcept
 {
     if (capturer_ == nullptr)
     {
@@ -172,23 +199,12 @@ void Window::ShowCapturedWindow() noexcept
 #endif
     }
 
-    ::std::thread t([&]()
-                    {
-        while(!done_)
-        {
-            auto x = capturer_->GetAllWindowNames();
-            {
-                ::std::lock_guard<::std::mutex> lock(window_mutex_);
-                windownames_ = x;
-            }
+    return true;
+}
 
-            ::std::this_thread::sleep_for(::std::chrono::milliseconds(2000));
-        } });
-
-    t.detach();
-
+void Window::ShowConfigWindow() noexcept
+{
     static ImGuiComboFlags flags = 0;
-
     {
         ::std::lock_guard<::std::mutex> lock(window_mutex_);
         auto combo_preview_value = captured_window_name_; // Pass in the preview value visible before opening the combo (it could be anything)
@@ -208,13 +224,15 @@ void Window::ShowCapturedWindow() noexcept
             ImGui::EndCombo();
         }
     }
+}
 
+void Window::ShowCapturedWindow() noexcept
+{
     if (capturer_)
     {
         Frame frame = capturer_->CaptureOne();
-        GLuint texture;
-        glGenTextures(1, &texture);
-        glBindTexture(GL_TEXTURE_2D, texture);
+        glGenTextures(1, &captured_window_texture_);
+        glBindTexture(GL_TEXTURE_2D, captured_window_texture_);
         glTexParameteri(GL_TEXTURE_2D,
                         GL_TEXTURE_MIN_FILTER,
                         GL_LINEAR);
@@ -242,11 +260,11 @@ void Window::ShowCapturedWindow() noexcept
         else if (frame.height > window_height_)
         {
             double ratio = (double)frame.height / frame.width;
-			frame.height = window_height_ - 100;
-			frame.width = frame.height / ratio;
+            frame.height = window_height_ - 100;
+            frame.width = frame.height / ratio;
         }
 
-        ImGui::Image((void *)(intptr_t)texture, ImVec2(frame.width, frame.height));
+        ImGui::Image((void *)(intptr_t)captured_window_texture_, ImVec2(frame.width, frame.height));
     }
 }
 

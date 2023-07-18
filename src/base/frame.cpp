@@ -36,7 +36,7 @@ Frame::~Frame()
 {
     if (data)
     {
-        delete[] data;
+        delete data;
         data = nullptr;
     }
 }

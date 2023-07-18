@@ -29,6 +29,10 @@ public:
     int DeInit() noexcept;
 
 private:
+    bool CheckCapturer() noexcept;
+    
+    void ShowConfigWindow() noexcept;
+
     void ShowCapturedWindow() noexcept;
 
 private:
@@ -41,6 +45,10 @@ private:
     size_t window_width_{ 1280 }, window_height_{ 720 };
     ::std::vector<::std::string> windownames_;
     ::std::mutex window_mutex_;
+    GLuint captured_window_texture_;
+    ::std::thread get_windows_t_;
+
+    uint32_t fps_{25};
 };
 
 _END_SCREEN2WEB_NM_

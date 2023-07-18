@@ -1,11 +1,13 @@
 #include "httpserver.h"
 
+#include "template.inc"
+
 _START_SCREEN2WEB_NM_
 
 int HttpServer::Init() noexcept
 {
 	server_.Get("/", [](const httplib::Request& req, httplib::Response& res) {
-		res.set_content("Hello World!", "text/plain");
+		res.set_content(html_code_buf, "text/html");
 	});
 
 	return 0;
