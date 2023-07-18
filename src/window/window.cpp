@@ -124,9 +124,7 @@ int Window::Loop() noexcept
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
-        ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(1.0f, 1.0f, 1.0f, 1.0f)); // �����ڱ�����ɫ����Ϊ����ɫ
-        ImGui::Begin("Hello, world!");                                            // Create a window called "Hello, world!" and append into it.
-        ImGui::PopStyleColor();                                                   // �ָ���ʽ����
+        ImGui::Begin("Screen2Web Preview");                                            // Create a window called "Hello, world!" and append into it.
         ShowCapturedWindow();
         ImGui::End();
 
@@ -161,11 +159,22 @@ void Window::ShowCapturedWindow() noexcept
     {
 #if defined(WIN32)
         capturer_ = ::std::make_unique<WinSDIScreenCapturer>();
-        capturer_->Open("Github Desktop");
 #elif defined(__APPLE__)
         capturer_ = ::std::make_unique<MacScreenCapturer>();
 #endif
     }
+
+    auto windownames = capturer_->GetAllWindowNames();
+    ImGui::BeginChild("CapturedWindow", ImVec2(0, 0), true);
+    for (auto &name : windownames)
+    {
+        if (ImGui::Selectable(name.c_str()))
+        {
+            captured_window_name_ = name;
+            capturer_->Open(captured_window_name_);
+        }
+    }
+    ImGui::EndChild();
 
     if (capturer_)
     {

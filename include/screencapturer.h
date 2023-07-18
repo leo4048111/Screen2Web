@@ -2,6 +2,7 @@
 #include "defines.h"
 
 #include <string>
+#include <vector>
 
 #include "frame.h"
 
@@ -14,6 +15,8 @@ public:
     ~ScreenCapturer() = default;
 
 public:
+    virtual ::std::vector<::std::string> GetAllWindowNames() noexcept = 0;
+
     virtual bool Open(const ::std::string &windowName) noexcept = 0;
 
     virtual Frame CaptureOne() noexcept = 0;

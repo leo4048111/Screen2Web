@@ -33,6 +33,40 @@ WinSDIScreenCapturer::~WinSDIScreenCapturer()
     this->Release();
 }
 
+::std::vector<::std::string> WinSDIScreenCapturer::GetAllWindowNames() noexcept
+{
+    ::std::vector<std::string> windowNames;
+
+    HWND hwnd = ::GetTopWindow(NULL);
+    while (hwnd)
+    {
+        constexpr int MAX_CLASS_NAME_LENGTH = 256;
+        constexpr int MAX_WINDOW_NAME_LENGTH = 256;
+
+        char className[MAX_CLASS_NAME_LENGTH];
+        ::GetClassName(hwnd, className, MAX_CLASS_NAME_LENGTH);
+
+        if (::strcmp(className, "ConsoleWindowClass") == 0)
+        {
+            hwnd = ::GetNextWindow(hwnd, GW_HWNDNEXT);
+            continue;
+        }
+
+        char windowName[MAX_WINDOW_NAME_LENGTH];
+        ::GetWindowText(hwnd, windowName, MAX_WINDOW_NAME_LENGTH);
+
+        if (::IsWindowVisible(hwnd) && windowName[0] != '\0')
+        {
+            windowNames.emplace_back(windowName);
+        }
+
+        hwnd = ::GetNextWindow(hwnd, GW_HWNDNEXT);
+    }
+
+    return windowNames;
+}
+
+
 bool WinSDIScreenCapturer::Open(const ::std::string &windowName) noexcept
 {
     hwnd_ = FindWindow(nullptr, windowName.c_str());
@@ -42,7 +76,7 @@ bool WinSDIScreenCapturer::Open(const ::std::string &windowName) noexcept
 
 Frame WinSDIScreenCapturer::CaptureOne() noexcept
 {
-    assert(hwnd_);
+    if(hwnd_ == nullptr) return Frame(0, 0, PixelFormat::UNKNOWN);
 
     RECT rect;
     ::GetWindowRect(hwnd_, &rect);

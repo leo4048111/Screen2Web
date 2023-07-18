@@ -15,6 +15,8 @@ public:
     ~WinSDIScreenCapturer();
 
 public:
+    virtual ::std::vector<::std::string> GetAllWindowNames() noexcept override;
+
     virtual bool Open(const ::std::string &windowName) noexcept override;
 
     virtual Frame CaptureOne() noexcept override;
