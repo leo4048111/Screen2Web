@@ -13,7 +13,7 @@
 #include "macScreencapturerImpl.h"
 #endif
 
-// #include "macScreencapturerImpl.h"
+#include "httpserver.h"
 
 _START_SCREEN2WEB_NM_
 
@@ -102,6 +102,7 @@ int Window::Init() noexcept
 
     get_windows_t_ = ::std::thread([&]()
         {
+            ::std::this_thread::sleep_for(::std::chrono::milliseconds(200));
             while (!done_)
             {
                 if (capturer_)
@@ -231,6 +232,8 @@ void Window::ShowCapturedWindow() noexcept
     if (capturer_)
     {
         Frame frame = capturer_->CaptureOne();
+        if(frame.fmt != PixelFormat::UNKNOWN)
+            HttpServer::GetInstance().PushFrame(frame);
         glGenTextures(1, &captured_window_texture_);
         glBindTexture(GL_TEXTURE_2D, captured_window_texture_);
         glTexParameteri(GL_TEXTURE_2D,

@@ -18,6 +18,7 @@ enum class PixelFormat
 class Frame
 {
 public:
+    Frame() = default;
     Frame(const size_t width, const size_t height, const PixelFormat fmt);
     ~Frame();
     Frame(const Frame &);

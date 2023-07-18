@@ -58,11 +58,13 @@ Frame::Frame(Frame&& other)
     width = other.width;
     height = other.height;
     fmt = other.fmt;
+    capacity = other.capacity;
 
     other.data = nullptr;
     other.width = 0;
     other.height = 0;
     other.fmt = PixelFormat::UNKNOWN;
+    other.capacity = 0;
 }
 
 Frame& Frame::operator=(const Frame& other)
@@ -96,11 +98,13 @@ Frame& Frame::operator=(Frame&& other)
         width = other.width;
         height = other.height;
         fmt = other.fmt;
+        capacity = other.capacity;
 
         other.data = nullptr;
         other.width = 0;
         other.height = 0;
         other.fmt = PixelFormat::UNKNOWN;
+        other.capacity = 0;
     }
     return *this;
 }
