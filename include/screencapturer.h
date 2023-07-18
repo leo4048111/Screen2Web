@@ -12,7 +12,7 @@ class ScreenCapturer
 {
 public:
     ScreenCapturer() = default;
-    ~ScreenCapturer() = default;
+    virtual ~ScreenCapturer() = default;
 
 public:
     virtual ::std::vector<::std::string> GetAllWindowNames() noexcept = 0;
