@@ -25,6 +25,7 @@ public:
 
 private:
     HWND hwnd_{nullptr};
+    size_t width_{ 0 }, height_{ 0 };
 };
 
 _END_SCREEN2WEB_NM_

@@ -80,27 +80,27 @@ Frame WinSDIScreenCapturer::CaptureOne() noexcept
 
     RECT rect;
     ::GetWindowRect(hwnd_, &rect);
-    int width = rect.right - rect.left;
-    int height = rect.bottom - rect.top;
+    width_ = rect.right - rect.left;
+    height_ = rect.bottom - rect.top;
 
     HDC hdcScreen = GetDC(NULL);
     HDC hdc = CreateCompatibleDC(hdcScreen);
-    HBITMAP hbmp = CreateCompatibleBitmap(hdcScreen, width, height);
+    HBITMAP hbmp = CreateCompatibleBitmap(hdcScreen, width_, height_);
     SelectObject(hdc, hbmp);
     PrintWindow(hwnd_, hdc,  PW_CLIENTONLY | PW_RENDERFULLCONTENT);
 
-    Frame frame(width, height, PixelFormat::RGBA);
+    Frame frame(width_, height_, PixelFormat::RGBA);
     BITMAPINFO bmi;
     memset(&bmi, 0, sizeof(BITMAPINFO));
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bmi.bmiHeader.biWidth = width;
-    bmi.bmiHeader.biHeight = -height;
+    bmi.bmiHeader.biWidth = width_;
+    bmi.bmiHeader.biHeight = -height_;
     bmi.bmiHeader.biPlanes = 1;
     bmi.bmiHeader.biBitCount = 32; // Assuming 32-bit RGBA format
     bmi.bmiHeader.biCompression = BI_RGB;
 
     // Get the window pixel data
-    GetDIBits(hdc, hbmp, 0, height, frame.data, &bmi, DIB_RGB_COLORS);
+    GetDIBits(hdc, hbmp, 0, height_, frame.data, &bmi, DIB_RGB_COLORS);
 
     // Clean up resources
     DeleteObject(hbmp);
@@ -111,6 +111,7 @@ Frame WinSDIScreenCapturer::CaptureOne() noexcept
 
 void WinSDIScreenCapturer::Release() noexcept
 {
+	hwnd_ = nullptr;
 }
 
 _END_SCREEN2WEB_NM_

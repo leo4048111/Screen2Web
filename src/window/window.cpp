@@ -4,6 +4,7 @@
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_opengl3.h"
 #include <stdio.h>
+#include <thread>
 
 #if defined(WIN32)
 #include "winSDIScreencapturerImpl.h"
@@ -59,7 +60,7 @@ int Window::Init() noexcept
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-    window_ = SDL_CreateWindow(window_name_.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
+    window_ = SDL_CreateWindow(window_name_.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, window_width_, window_height_, window_flags);
     gl_context_ = SDL_GL_CreateContext(window_);
     SDL_GL_MakeCurrent(window_, gl_context_);
     SDL_GL_SetSwapInterval(1); // Enable vsync
@@ -117,6 +118,11 @@ int Window::Loop() noexcept
                 done_ = true;
             if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window_))
                 done_ = true;
+            if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_RESIZED && event.window.windowID == SDL_GetWindowID(window_)) // handle resize
+            {
+				window_width_ = event.window.data1;
+				window_height_ = event.window.data2;
+			}
         }
 
         // Start the Dear ImGui frame
@@ -124,7 +130,9 @@ int Window::Loop() noexcept
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
-        ImGui::Begin("Screen2Web Preview");                                            // Create a window called "Hello, world!" and append into it.
+        ImGui::SetNextWindowSize(ImVec2(window_width_, window_height_), 0);
+        ImGui::SetNextWindowPos(ImVec2(0, 0));
+        ImGui::Begin("Screen2Web preview", nullptr, ImGuiWindowFlags_NoCollapse); // Create a window called "Hello, world!" and append into it.
         ShowCapturedWindow();
         ImGui::End();
 
@@ -164,17 +172,42 @@ void Window::ShowCapturedWindow() noexcept
 #endif
     }
 
-    auto windownames = capturer_->GetAllWindowNames();
-    ImGui::BeginChild("CapturedWindow", ImVec2(0, 0), true);
-    for (auto &name : windownames)
-    {
-        if (ImGui::Selectable(name.c_str()))
+    ::std::thread t([&]()
+                    {
+        while(!done_)
         {
-            captured_window_name_ = name;
-            capturer_->Open(captured_window_name_);
+            auto x = capturer_->GetAllWindowNames();
+            {
+                ::std::lock_guard<::std::mutex> lock(window_mutex_);
+                windownames_ = x;
+            }
+
+            ::std::this_thread::sleep_for(::std::chrono::milliseconds(2000));
+        } });
+
+    t.detach();
+
+    static ImGuiComboFlags flags = 0;
+
+    {
+        ::std::lock_guard<::std::mutex> lock(window_mutex_);
+        auto combo_preview_value = captured_window_name_; // Pass in the preview value visible before opening the combo (it could be anything)
+        if (ImGui::BeginCombo("Capture window", combo_preview_value.c_str(), flags))
+        {
+            for (int n = 0; n < windownames_.size(); n++)
+            {
+                if (ImGui::Selectable(windownames_[n].c_str(), false))
+                {
+                    if (windownames_[n] != captured_window_name_)
+                    {
+                        captured_window_name_ = windownames_[n];
+                        capturer_->Open(windownames_[n]);
+                    }
+                }
+            }
+            ImGui::EndCombo();
         }
     }
-    ImGui::EndChild();
 
     if (capturer_)
     {
@@ -200,6 +233,19 @@ void Window::ShowCapturedWindow() noexcept
                      GL_BGRA,
                      GL_UNSIGNED_BYTE,
                      frame.data);
+        if (frame.width > window_width_)
+        {
+            double ratio = (double)frame.width / frame.height;
+            frame.width = window_width_ - 100;
+            frame.height = frame.width / ratio;
+        }
+        else if (frame.height > window_height_)
+        {
+            double ratio = (double)frame.height / frame.width;
+			frame.height = window_height_ - 100;
+			frame.width = frame.height / ratio;
+        }
+
         ImGui::Image((void *)(intptr_t)texture, ImVec2(frame.width, frame.height));
     }
 }

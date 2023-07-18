@@ -4,6 +4,7 @@
 
 #include <string>
 #include <memory>
+#include <mutex>
 
 #include <SDL2/SDL.h>
 #if defined(IMGUI_IMPL_OPENGL_ES2)
@@ -32,11 +33,14 @@ private:
 
 private:
     bool done_{false};
-    SDL_Window *window_{nullptr};
+    SDL_Window* window_{ nullptr };
     ::std::unique_ptr<ScreenCapturer> capturer_{nullptr};
-    SDL_GLContext gl_context_{nullptr};
+    SDL_GLContext gl_context_{ nullptr };
     ::std::string window_name_{"Screen2Web"};
     ::std::string captured_window_name_{window_name_};
+    size_t window_width_{ 1280 }, window_height_{ 720 };
+    ::std::vector<::std::string> windownames_;
+    ::std::mutex window_mutex_;
 };
 
 _END_SCREEN2WEB_NM_
