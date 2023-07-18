@@ -7,11 +7,13 @@ set(CMAKE_CXX_STANDARD 17)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 set(SCREEN2WEB_ROOT_DIR ${CMAKE_SOURCE_DIR})
+set(SCREEN2WEB_THIRD_PARTY_DIR ${SCREEN2WEB_ROOT_DIR}/third_party)
 
 set(SRC_FILES
 ${SCREEN2WEB_ROOT_DIR}/src/main.cpp
 ${SCREEN2WEB_ROOT_DIR}/src/window/window.cpp
 ${SCREEN2WEB_ROOT_DIR}/src/base/frame.cpp
+${SCREEN2WEB_ROOT_DIR}/src/base/httpserver.cpp
 ${SCREEN2WEB_ROOT_DIR}/src/imgui_impl_sdl2.cpp
 ${SCREEN2WEB_ROOT_DIR}/src/imgui_impl_opengl3.cpp
 ${SCREEN2WEB_ROOT_DIR}/src/imgui/imgui.cpp
@@ -41,23 +43,9 @@ endif()
 
 include_directories(${SDL2_INCLUDE_DIRS})
 
-# # Opencv2
-# find_package(OpenCV REQUIRED)
-
-# if (NOT OpenCV_FOUND)
-#     message(FATAL_ERROR "OpenCV not found")
-# endif()
-
-# include_directories(${OpenCV_INCLUDE_DIRS})
-
-# # screen share lite
-# find_package(screen_capture_lite_shared REQUIRED)
-
-# if (NOT screen_capture_lite_shared_FOUND)
-#     message(FATAL_ERROR "screen_capture_lite_shared not found")
-# endif()
-
-# include_directories(${screen_capture_lite_shared_INCLUDE_DIRS})
+# third party header-only dependencies
+# httplib
+include_directories(${SCREEN2WEB_THIRD_PARTY_DIR}/cpp-httplib)
 
 add_executable(screen2web ${SRC_FILES})
 
