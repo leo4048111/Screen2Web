@@ -14,14 +14,14 @@ bool WinDXGIScreenCapturer::Open(const ::std::string &windowName) noexcept
 		return false;
 	}
 
-	HWND hWnd = FindWindow(NULL, windowName.c_str());
-    if (!hWnd)
+	hWnd_ = FindWindow(NULL, windowName.c_str());
+    if (!hWnd_)
     {
 		return false;
 	}
 
 	RECT rect;
-	::GetWindowRect(hWnd, &rect);
+	::GetWindowRect(hWnd_, &rect);
 	width_ = rect.right - rect.left;
 	height_ = rect.bottom - rect.top;
 
@@ -79,6 +79,8 @@ bool WinDXGIScreenCapturer::Open(const ::std::string &windowName) noexcept
 Frame WinDXGIScreenCapturer::CaptureOne() noexcept
 {
 	Frame frame(width_, height_, PixelFormat::RGBA);
+
+	if(duplication_ == nullptr) return frame;
 
 	DXGI_OUTDUPL_FRAME_INFO frameInfo;
 	IDXGIResource* resource = nullptr;

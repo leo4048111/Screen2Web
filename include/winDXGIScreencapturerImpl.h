@@ -23,6 +23,7 @@ public:
     virtual void Release() noexcept override;
 
 private:
+    HWND hWnd_{ nullptr };
     ID3D11Device* device_{ nullptr };
     ID3D11DeviceContext* deviceContext_{ nullptr };
     IDXGIOutputDuplication* duplication_{ nullptr };
