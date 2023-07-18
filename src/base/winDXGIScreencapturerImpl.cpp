@@ -14,7 +14,7 @@ bool WinDXGIScreenCapturer::Open(const ::std::string &windowName) noexcept
 		return false;
 	}
 
-	HWND hWnd = ::FindWindowA(NULL, windowName.c_str());
+	HWND hWnd = FindWindow(NULL, windowName.c_str());
     if (!hWnd)
     {
 		return false;
@@ -27,40 +27,47 @@ bool WinDXGIScreenCapturer::Open(const ::std::string &windowName) noexcept
 
 	D3D_FEATURE_LEVEL featureLevel;
 	HRESULT hr = ::D3D11CreateDevice(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, 0, NULL, 0, D3D11_SDK_VERSION,
-        		&device_, &featureLevel, &deviceContext_);
-    if (FAILED(hr))
-    {
+		&device_, &featureLevel, &deviceContext_);
+
+	if (FAILED(hr))
+	{
 		return false;
 	}
 
 	IDXGIDevice* dxgiDevice = nullptr;
 	hr = device_->QueryInterface(__uuidof(IDXGIDevice), reinterpret_cast<void**>(&dxgiDevice));
-    if (FAILED(hr))
-    {
+	if (FAILED(hr))
+	{
 		return false;
 	}
 
 	IDXGIAdapter* dxgiAdapter = nullptr;
 	hr = dxgiDevice->GetParent(__uuidof(IDXGIAdapter), reinterpret_cast<void**>(&dxgiAdapter));
-    if (FAILED(hr))
-    {
-		return false;
-	}
-
-	IDXGIFactory* dxgiFactory = nullptr;
-	hr = dxgiAdapter->GetParent(__uuidof(IDXGIFactory), reinterpret_cast<void**>(&dxgiFactory));
 	if (FAILED(hr))
 	{
 		return false;
 	}
 
-	hr = dxgiFactory->CreateSwapChain(device_, &swapChainDesc_, &swapChain_);
+	IDXGIOutput* dxgiOutput;
+	hr = dxgiAdapter->EnumOutputs(0, &dxgiOutput);
 	if (FAILED(hr))
 	{
 		return false;
 	}
 
-	hr = dxgiDevice->QueryInterface(__uuidof(IDXGIOutputDuplication), reinterpret_cast<void**>(&duplication_));
+	IDXGIOutput1* dxgiOutput1 = nullptr;
+	hr = dxgiOutput->QueryInterface(
+		__uuidof(IDXGIOutput1),
+		reinterpret_cast<void**>(&dxgiOutput1));
+	dxgiOutput->Release();
+	if (FAILED(hr))
+	{
+		return false;
+	}
+
+	hr = dxgiOutput1->DuplicateOutput(device_, &duplication_);
+	dxgiOutput1->Release();
+
 	if (FAILED(hr))
 	{
 		return false;
@@ -72,63 +79,59 @@ bool WinDXGIScreenCapturer::Open(const ::std::string &windowName) noexcept
 Frame WinDXGIScreenCapturer::CaptureOne() noexcept
 {
 	Frame frame(width_, height_, PixelFormat::RGBA);
-	if (!duplication_)
-	{
-		return frame;
-	}
 
 	DXGI_OUTDUPL_FRAME_INFO frameInfo;
 	IDXGIResource* resource = nullptr;
-	HRESULT hr = duplication_->AcquireNextFrame(1000, &frameInfo, &resource);
+	ID3D11Texture2D* acquireFrame = nullptr;
+	ID3D11Texture2D* texture = nullptr;
+
+	HRESULT hr = duplication_->AcquireNextFrame(0, &frameInfo, &resource);
 	if (FAILED(hr))
 	{
-		return frame;
+		if (hr == DXGI_ERROR_WAIT_TIMEOUT)
+		{
+			return frame;
+		}
+		else
+		{
+			return frame;
+		}
 	}
 
-	IDXGISurface* surface = nullptr;
-	hr = resource->QueryInterface(__uuidof(IDXGISurface), reinterpret_cast<void**>(&surface));
+	hr = resource->QueryInterface(__uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&acquireFrame));
+	resource->Release();
 	if (FAILED(hr))
 	{
 		return frame;
 	}
 
 	D3D11_TEXTURE2D_DESC desc;
-	desc.Width = width_;
-	desc.Height = height_;
-	desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-	desc.ArraySize = 1;
-	desc.BindFlags = 0;
-	desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-	desc.MipLevels = 1;
-	desc.MiscFlags = 0;
-	desc.SampleDesc.Count = 1;
-	desc.SampleDesc.Quality = 0;
+	acquireFrame->GetDesc(&desc);
 	desc.Usage = D3D11_USAGE_STAGING;
+	desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+	desc.BindFlags = 0;
+	desc.MiscFlags = 0;
+	desc.MipLevels = 1;
+	desc.ArraySize = 1;
+	desc.SampleDesc.Count = 1;
+	device_->CreateTexture2D(&desc, NULL, &texture);
+	if (&texture && texture)
+	{
+		deviceContext_->CopyResource(texture, acquireFrame);
+	}
+	acquireFrame->Release();
 
-	ID3D11Texture2D* texture = nullptr;
-	hr = device_->CreateTexture2D(&desc, nullptr, &texture);
+	hr = duplication_->ReleaseFrame();
 	if (FAILED(hr))
 	{
 		return frame;
 	}
 
-	deviceContext_->CopyResource(texture, (ID3D11Resource*)surface);
-
-	D3D11_MAPPED_SUBRESOURCE mapped;
-	hr = deviceContext_->Map(texture, 0, D3D11_MAP_READ, 0, &mapped);
-	if (FAILED(hr))
-	{
-		return frame;
-	}
-
-	memcpy_s(frame.data, width_ * height_ * 4, mapped.pData, width_ * height_ * 4);
-
-	deviceContext_->Unmap(texture, 0);
-
-	duplication_->ReleaseFrame();
-	resource->Release();
-	surface->Release();
-	texture->Release();
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	deviceContext_->Map(texture, 0, D3D11_MAP_READ, 0, &mappedResource);
+	frame = Frame(desc.Width, desc.Height, PixelFormat::RGBA);
+	for (size_t i = 0; i < desc.Height; i++)
+		memcpy_s(frame.data + i * desc.Width * 4, desc.Width * 4, (uint8_t*)mappedResource.pData + i * mappedResource.RowPitch, desc.Width * 4);
 
 	return frame;
 }

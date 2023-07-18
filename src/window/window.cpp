@@ -160,7 +160,7 @@ void Window::ShowCapturedWindow() noexcept
     {
 #if defined(WIN32)
         capturer_ = ::std::make_unique<WinDXGIScreenCapturer>();
-        capturer_->Open("Github Desktop");
+        capturer_->Open("Screen2Web");
 #elif defined(__APPLE__)
         capturer_ = ::std::make_unique<MacScreenCapturer>();
 #endif
@@ -190,7 +190,7 @@ void Window::ShowCapturedWindow() noexcept
                      GL_BGRA,
                      GL_UNSIGNED_BYTE,
                      frame.data);
-        ImGui::Image((void *)(intptr_t)texture, ImVec2(frame.width, frame.height), ImVec2(0, 1), ImVec2(1, 0));
+        ImGui::Image((void *)(intptr_t)texture, ImVec2(frame.width, frame.height));
     }
 }
 
