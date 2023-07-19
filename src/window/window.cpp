@@ -186,7 +186,6 @@ int Window::DeInit() noexcept
     SDL_DestroyWindow(window_);
     SDL_Quit();
 
-    get_windows_t_.join();
     return 0;
 }
 
