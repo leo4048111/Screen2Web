@@ -29,21 +29,21 @@ int Window::Init() noexcept
     // Decide GL+GLSL versions
 #if defined(IMGUI_IMPL_OPENGL_ES2)
     // GL ES 2.0 + GLSL 100
-    const char* glsl_version = "#version 100";
+    const char *glsl_version = "#version 100";
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 #elif defined(__APPLE__)
     // GL 3.2 Core + GLSL 150
-    const char* glsl_version = "#version 150";
+    const char *glsl_version = "#version 150";
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG); // Always required on Mac
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 #else
     // GL 3.0 + GLSL 130
-    const char* glsl_version = "#version 130";
+    const char *glsl_version = "#version 130";
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -68,7 +68,7 @@ int Window::Init() noexcept
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO &io = ImGui::GetIO();
     (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
@@ -101,7 +101,7 @@ int Window::Init() noexcept
     done_ = false;
 
     get_windows_t_ = ::std::thread([&]()
-        {
+                                   {
             ::std::this_thread::sleep_for(::std::chrono::milliseconds(200));
             while (!done_)
             {
@@ -153,7 +153,7 @@ int Window::Loop() noexcept
         ImGui::SetNextWindowSize(ImVec2(window_width_, window_height_), 0);
         ImGui::SetNextWindowPos(ImVec2(0, 0));
         ImGui::Begin("Screen2Web preview", nullptr, ImGuiWindowFlags_NoCollapse); // Create a window called "Hello, world!" and append into it.
-        if(CheckCapturer())
+        if (CheckCapturer())
         {
             ShowConfigWindow();
             ShowCapturedWindow();
@@ -233,8 +233,10 @@ void Window::ShowCapturedWindow() noexcept
     if (capturer_)
     {
         Frame frame = capturer_->CaptureOne();
-        if(frame.fmt != PixelFormat::UNKNOWN)
-            HttpServer::GetInstance().PushFrame(frame);
+        if (frame.fmt == PixelFormat::UNKNOWN)
+            return;
+
+        HttpServer::GetInstance().PushFrame(frame);
         glGenTextures(1, &captured_window_texture_);
         glBindTexture(GL_TEXTURE_2D, captured_window_texture_);
         glTexParameteri(GL_TEXTURE_2D,

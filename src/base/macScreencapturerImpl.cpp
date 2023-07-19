@@ -6,15 +6,40 @@ _START_SCREEN2WEB_NM_
 {
     ::std::vector<std::string> windowNames;
 
+    auto windowList = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly | kCGWindowListExcludeDesktopElements, kCGNullWindowID);
+
+    CFIndex numWindows = CFArrayGetCount(windowList);
+
+    for (int i = 0; i < (int)numWindows; i++)
+    {
+        windowInfo_ = (CFDictionaryRef)CFArrayGetValueAtIndex(windowList, i);
+        CFStringRef windowOwnerNameRef = (CFStringRef)CFDictionaryGetValue(windowInfo_, kCGWindowOwnerName);
+
+        if (windowOwnerNameRef == nullptr)
+            continue;
+
+        CFIndex bufferSize = CFStringGetLength(windowOwnerNameRef) + 1; // The +1 is for having space for the string to be NUL terminated
+        char buffer[bufferSize];
+        ::std::string windowOwnerNameStr;
+        if (CFStringGetCString(windowOwnerNameRef, buffer, bufferSize, kCFStringEncodingUTF8))
+        {
+            windowOwnerNameStr = ::std::string(buffer);
+        }
+
+        if (windowOwnerNameStr != "")
+            windowNames.push_back(windowOwnerNameStr);
+    }
+
     return windowNames;
 }
 
 bool MacScreenCapturer::Open(const ::std::string &windowName) noexcept
 {
+    bool found = false;
+
     auto windowList = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly | kCGWindowListExcludeDesktopElements, kCGNullWindowID);
 
     CFIndex numWindows = CFArrayGetCount(windowList);
-    bool found = false;
 
     for (int i = 0; i < (int)numWindows; i++)
     {
@@ -43,7 +68,9 @@ bool MacScreenCapturer::Open(const ::std::string &windowName) noexcept
 
 Frame MacScreenCapturer::CaptureOne() noexcept
 {
-    assert(!CGRectIsNull(windowRect_));
+    Frame frame;
+    if (windowInfo_ == nullptr)
+        return frame;
 
     // create a bitmap with the window size
     CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
@@ -66,8 +93,6 @@ Frame MacScreenCapturer::CaptureOne() noexcept
     CGImageRef imageRef = CGWindowListCreateImage(CGRectNull, kCGWindowListOptionIncludingWindow, wndId, kCGWindowImageBoundsIgnoreFraming);
     CGContextDrawImage(ctx, windowRect_, imageRef);
     CGImageRelease(imageRef);
-
-    Frame frame;
 
     return frame;
 }

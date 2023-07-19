@@ -27,7 +27,7 @@ public:
     Frame &operator=(Frame &&);
 
 public:
-    PixelFormat fmt;
+    PixelFormat fmt{PixelFormat::UNKNOWN};
     uint8_t *data{nullptr};
     size_t capacity{0};
     size_t width{0};
