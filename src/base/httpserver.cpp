@@ -34,8 +34,10 @@ int HttpServer::Init() noexcept
 
 int HttpServer::Listen(const ::std::string &host, int port, int socket_flags) noexcept
 {
-	sv_t_ = ::std::thread([this]()
-						  { server_.listen("0.0.0.0", 1899); });
+	sv_t_ = ::std::thread([&]()
+						  { 
+			int result = server_.listen(host.c_str(), port, socket_flags);
+		});
 
 	sv_t_.detach();
 
