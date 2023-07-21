@@ -2,18 +2,17 @@
 
 #include "template.inc"
 
-#define SVPNG_OUTPUT ::std::vector<std::uint8_t> buffer
+#include <vector>
+
+#define SVPNG_PUT(u) buffer.push_back(u)
+#define SVPNG_OUTPUT ::std::vector<std::uint8_t>& buffer
 #include "svpng.inc"
 
 _START_SCREEN2WEB_NM_
 
 namespace
 {
-	::std::string Frame2Base64Encoded(const Frame &frame)
-	{
-		std::string data(frame.data, frame.data + frame.size);
-		return httplib::detail::base64_encode(data);
-	}
+
 }
 
 int HttpServer::Init() noexcept
@@ -41,9 +40,7 @@ int HttpServer::Init() noexcept
 			::std::vector<std::uint8_t> buffer;
 			svpng(buffer, frame.width, frame.height, (const unsigned char *)frame.data, 1);
 			res.set_header("Content-Type", "image/png"); // Change "image/jpeg" to the appropriate content type if it's not an image.
-			res.set_header("Image-Width", ::std::to_string(frame.width));
-			res.set_header("Image-Height", ::std::to_string(frame.height));
-			res.body = ::std::string(buffer.begin(), buffer.end());
+			res.body = httplib::detail::base64_encode(::std::string(buffer.begin(), buffer.end()));
 			res.status = 200; });
 
 	return 0;
