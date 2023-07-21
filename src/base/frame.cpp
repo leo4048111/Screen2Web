@@ -50,6 +50,7 @@ Frame::Frame(const Frame& other)
     width = other.width;
     height = other.height;
     fmt = other.fmt;
+    timestamp = other.timestamp;
 }
 
 Frame::Frame(Frame&& other)
@@ -59,6 +60,7 @@ Frame::Frame(Frame&& other)
     height = other.height;
     fmt = other.fmt;
     size = other.size;
+    timestamp = other.timestamp;
 
     other.data = nullptr;
     other.width = 0;
@@ -80,6 +82,7 @@ Frame& Frame::operator=(const Frame& other)
         width = other.width;
         height = other.height;
         fmt = other.fmt;
+        timestamp = other.timestamp;
     }
     return *this;
 }
@@ -99,6 +102,7 @@ Frame& Frame::operator=(Frame&& other)
         height = other.height;
         fmt = other.fmt;
         size = other.size;
+        timestamp = other.timestamp;
 
         other.data = nullptr;
         other.width = 0;

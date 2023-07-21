@@ -22,11 +22,16 @@ public:
 
     int CleanUp() noexcept;
 
-    void PushFrame(const Frame &frame) noexcept;
+    void PushFrame(Frame &frame) noexcept;
 
 private:
+    bool done_{false};
+
     ::httplib::Server server_;
     ::std::thread sv_t_;
+    ::std::thread scanner_t_;
+    ::std::mutex cond_mutex_;
+    ::std::condition_variable cond_;
 
     ::std::queue<Frame> frame_queue_;
     ::std::mutex frame_queue_mutex_;

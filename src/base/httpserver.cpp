@@ -23,9 +23,7 @@ int HttpServer::Init() noexcept
 		Frame frame;
 		{
 			::std::lock_guard<::std::mutex> lock(frame_queue_mutex_);
-			if(frame_queue_.size())
 				frame = frame_queue_.front();
-			if (frame_queue_.size() > 1) frame_queue_.pop();
 		}
 		::std::string base64Data = Frame2Base64Encoded(frame);
 		res.set_header("Content-Type", "image/png");
@@ -36,24 +34,61 @@ int HttpServer::Init() noexcept
 
 int HttpServer::Listen(const ::std::string &host, int port, int socket_flags) noexcept
 {
-	sv_t_ = ::std::thread([&]()
+	sv_t_ = ::std::thread([this]()
 						  { server_.listen("0.0.0.0", 1899); });
 
 	sv_t_.detach();
+
+	scanner_t_ = ::std::thread([this]() {
+		for (;;)
+		{
+			if (frame_queue_mutex_.try_lock())
+			{
+				bool isEmpty = frame_queue_.empty();
+				frame_queue_mutex_.unlock();
+				if (isEmpty) {
+					::std::unique_lock<::std::mutex> lock(cond_mutex_);
+					cond_.wait(lock);
+				}
+
+				{
+					::std::lock_guard<::std::mutex> lock(frame_queue_mutex_);
+					auto now = ::std::chrono::high_resolution_clock::now();
+					while (!frame_queue_.empty())
+					{
+						auto frame = frame_queue_.front();
+						if (now - frame.timestamp > ::std::chrono::milliseconds(1000 / 25))
+						{
+							frame_queue_.pop();
+						}
+						else break;
+					}
+				}
+			}
+			::std::this_thread::sleep_for(::std::chrono::milliseconds(1000 / 25));
+		}
+		});
+
+	scanner_t_.detach();
 
 	return 0;
 }
 
 int HttpServer::CleanUp() noexcept
 {
+	done_ = true;
 	return 0;
 }
 
-void HttpServer::PushFrame(const Frame &frame) noexcept
+void HttpServer::PushFrame(Frame &frame) noexcept
 {
+	frame.timestamp = ::std::chrono::high_resolution_clock::now();
 	::std::lock_guard<::std::mutex> lock(frame_queue_mutex_);
 	if (frame_queue_.size() < 5)
+	{
 		frame_queue_.push(frame);
+		cond_.notify_one();
+	}
 }
 
 _END_SCREEN2WEB_NM_
