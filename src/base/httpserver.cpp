@@ -18,16 +18,30 @@ int HttpServer::Init() noexcept
 	server_.Get("/", [](const httplib::Request &req, httplib::Response &res)
 				{ res.set_content(html_code_buf, "text/html"); });
 
-	server_.Get("/GetOneFrame", [&](const httplib::Request &req, httplib::Response &res)
-				{
-		Frame frame;
+	server_.Get("/GetOneFrame", [&](const httplib::Request& req, httplib::Response& res)
 		{
-			::std::lock_guard<::std::mutex> lock(frame_queue_mutex_);
+			Frame frame;
+			{
+				bool isEmpty = false;
+				{
+					::std::lock_guard<::std::mutex> lg(frame_queue_mutex_);
+					isEmpty = frame_queue_.empty();
+				}
+				if (isEmpty) {
+					::std::unique_lock<::std::mutex> lock(cond_mutex_);
+					cond_.wait(lock);
+				}
+
+				::std::lock_guard<::std::mutex> lg(frame_queue_mutex_);
 				frame = frame_queue_.front();
-		}
-		::std::string base64Data = Frame2Base64Encoded(frame);
-		res.set_header("Content-Type", "image/png");
-		res.set_content(base64Data, "image/png"); });
+			}
+			::std::string base64Data = Frame2Base64Encoded(frame);
+			res.set_header("Content-Type", "image/bmp"); // Change "image/jpeg" to the appropriate content type if it's not an image.
+			res.set_header("Image-Width", ::std::to_string(frame.width));
+			res.set_header("Image-Height", ::std::to_string(frame.height));
+			res.body = ::std::string(frame.data, frame.data + frame.size);
+			res.status = 200;
+		});
 
 	return 0;
 }
@@ -89,7 +103,7 @@ void HttpServer::PushFrame(Frame &frame) noexcept
 	if (frame_queue_.size() < 5)
 	{
 		frame_queue_.push(frame);
-		cond_.notify_one();
+		cond_.notify_all();
 	}
 }
 
