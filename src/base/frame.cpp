@@ -4,7 +4,7 @@
 
 _START_SCREEN2WEB_NM_
 
-namespace 
+namespace
 {
     size_t PixelFormatSize(const PixelFormat fmt)
     {
@@ -41,7 +41,7 @@ Frame::~Frame()
     }
 }
 
-Frame::Frame(const Frame& other)
+Frame::Frame(const Frame &other)
 {
     this->size = other.size;
     data = new uint8_t[size];
@@ -53,7 +53,7 @@ Frame::Frame(const Frame& other)
     timestamp = other.timestamp;
 }
 
-Frame::Frame(Frame&& other)
+Frame::Frame(Frame &&other)
 {
     data = other.data;
     width = other.width;
@@ -69,7 +69,7 @@ Frame::Frame(Frame&& other)
     other.size = 0;
 }
 
-Frame& Frame::operator=(const Frame& other)
+Frame &Frame::operator=(const Frame &other)
 {
     if (this != &other)
     {
@@ -87,11 +87,11 @@ Frame& Frame::operator=(const Frame& other)
     return *this;
 }
 
-Frame& Frame::operator=(Frame&& other)
+Frame &Frame::operator=(Frame &&other)
 {
     if (this != &other)
     {
-        if(this->data)
+        if (this->data)
         {
             delete[] data;
             data = nullptr;
@@ -111,6 +111,61 @@ Frame& Frame::operator=(Frame&& other)
         other.size = 0;
     }
     return *this;
+}
+
+void Frame::ToFormat(const PixelFormat fmt)
+{
+    if (this->fmt == fmt)
+        return;
+
+    if (this->fmt == PixelFormat::UNKNOWN)
+        return;
+
+    if (fmt == PixelFormat::UNKNOWN)
+        return;
+
+    if (this->fmt == PixelFormat::RGB && fmt == PixelFormat::BGR)
+    {
+        for (size_t i = 0; i < size; i += 3)
+        {
+            uint8_t tmp = data[i];
+            data[i] = data[i + 2];
+            data[i + 2] = tmp;
+        }
+    }
+    else if (this->fmt == PixelFormat::BGR && fmt == PixelFormat::RGB)
+    {
+        for (size_t i = 0; i < size; i += 3)
+        {
+            uint8_t tmp = data[i];
+            data[i] = data[i + 2];
+            data[i + 2] = tmp;
+        }
+    }
+    else if (this->fmt == PixelFormat::RGBA && fmt == PixelFormat::BGRA)
+    {
+        for (size_t i = 0; i < size; i += 4)
+        {
+            uint8_t tmp = data[i];
+            data[i] = data[i + 2];
+            data[i + 2] = tmp;
+        }
+    }
+    else if (this->fmt == PixelFormat::BGRA && fmt == PixelFormat::RGBA)
+    {
+        for (size_t i = 0; i < size; i += 4)
+        {
+            uint8_t tmp = data[i];
+            data[i] = data[i + 2];
+            data[i + 2] = tmp;
+        }
+    }
+    else
+    {
+        return;
+    }
+
+    this->fmt = fmt;
 }
 
 _END_SCREEN2WEB_NM_

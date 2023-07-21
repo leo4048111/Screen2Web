@@ -27,6 +27,8 @@ public:
     Frame &operator=(const Frame &);
     Frame &operator=(Frame &&);
 
+    void ToFormat(const PixelFormat fmt);
+
 public:
     PixelFormat fmt{PixelFormat::UNKNOWN};
     uint8_t *data{nullptr};
