@@ -25,8 +25,8 @@ namespace
 
 Frame::Frame(const size_t width, const size_t height, const PixelFormat fmt)
 {
-    this->capacity = width * height * PixelFormatSize(fmt);
-    this->data = new uint8_t[capacity];
+    this->size = width * height * PixelFormatSize(fmt);
+    this->data = new uint8_t[size];
     this->width = width;
     this->height = height;
     this->fmt = fmt;
@@ -43,9 +43,9 @@ Frame::~Frame()
 
 Frame::Frame(const Frame& other)
 {
-    this->capacity = other.capacity;
-    data = new uint8_t[capacity];
-    ::std::memcpy(data, other.data, capacity);
+    this->size = other.size;
+    data = new uint8_t[size];
+    ::std::memcpy(data, other.data, size);
 
     width = other.width;
     height = other.height;
@@ -58,13 +58,13 @@ Frame::Frame(Frame&& other)
     width = other.width;
     height = other.height;
     fmt = other.fmt;
-    capacity = other.capacity;
+    size = other.size;
 
     other.data = nullptr;
     other.width = 0;
     other.height = 0;
     other.fmt = PixelFormat::UNKNOWN;
-    other.capacity = 0;
+    other.size = 0;
 }
 
 Frame& Frame::operator=(const Frame& other)
@@ -73,9 +73,9 @@ Frame& Frame::operator=(const Frame& other)
     {
         delete[] data;
 
-        capacity = other.capacity;
-        data = new uint8_t[capacity];
-        ::std::memcpy(data, other.data, capacity);
+        size = other.size;
+        data = new uint8_t[size];
+        ::std::memcpy(data, other.data, size);
 
         width = other.width;
         height = other.height;
@@ -98,13 +98,13 @@ Frame& Frame::operator=(Frame&& other)
         width = other.width;
         height = other.height;
         fmt = other.fmt;
-        capacity = other.capacity;
+        size = other.size;
 
         other.data = nullptr;
         other.width = 0;
         other.height = 0;
         other.fmt = PixelFormat::UNKNOWN;
-        other.capacity = 0;
+        other.size = 0;
     }
     return *this;
 }

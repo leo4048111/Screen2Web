@@ -29,7 +29,7 @@ public:
 public:
     PixelFormat fmt{PixelFormat::UNKNOWN};
     uint8_t *data{nullptr};
-    size_t capacity{0};
+    size_t size{0};
     size_t width{0};
     size_t height{0};
 };

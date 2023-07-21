@@ -8,7 +8,7 @@ namespace
 {
 	::std::string Frame2Base64Encoded(const Frame &frame)
 	{
-		std::string data(frame.data, frame.data + frame.capacity);
+		std::string data(frame.data, frame.data + frame.size);
 		return httplib::detail::base64_encode(data);
 	}
 }
