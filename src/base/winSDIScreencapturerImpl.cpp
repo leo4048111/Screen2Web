@@ -4,28 +4,6 @@ _START_SCREEN2WEB_NM_
 
 namespace
 {
-    BITMAPINFOHEADER CreateBitmapInfoHeader(HBITMAP hBmp) noexcept
-    {
-        BITMAP bmp;
-        BITMAPINFOHEADER bi;
-
-        GetObject(hBmp, sizeof(BITMAP), &bmp);
-
-        bi.biSize = sizeof(BITMAPINFOHEADER);
-        bi.biWidth = bmp.bmWidth;
-        // negative height to ensure that the origin is at the top left corner of the returned bitmap
-        bi.biHeight = bmp.bmHeight;
-        bi.biPlanes = 1;
-        bi.biBitCount = bmp.bmBitsPixel;
-        bi.biCompression = BI_RGB;
-        bi.biSizeImage = 0;
-        bi.biXPelsPerMeter = 0;
-        bi.biYPelsPerMeter = 0;
-        bi.biClrUsed = 0;
-        bi.biClrImportant = 0;
-
-        return bi;
-    }
 }
 
 WinSDIScreenCapturer::~WinSDIScreenCapturer()

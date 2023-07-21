@@ -38,6 +38,7 @@ int HttpServer::Init() noexcept
 				frame = frame_queue_.front();
 			}
 			::std::vector<std::uint8_t> buffer;
+			frame.ToFormat(PixelFormat::BGRA);
 			svpng(buffer, frame.width, frame.height, (const unsigned char *)frame.data, 1);
 			res.set_header("Content-Type", "image/png"); // Change "image/jpeg" to the appropriate content type if it's not an image.
 			res.body = httplib::detail::base64_encode(::std::string(buffer.begin(), buffer.end()));
@@ -98,7 +99,7 @@ void HttpServer::PushFrame(Frame &frame) noexcept
 {
 	frame.timestamp = ::std::chrono::high_resolution_clock::now();
 	::std::lock_guard<::std::mutex> lock(frame_queue_mutex_);
-	if (frame_queue_.size() < 5)
+	if (frame_queue_.size() < 10)
 	{
 		frame_queue_.push(frame);
 		cond_.notify_all();
