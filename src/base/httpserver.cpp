@@ -2,6 +2,9 @@
 
 #include "template.inc"
 
+#define SVPNG_OUTPUT ::std::vector<std::uint8_t> buffer
+#include "svpng.inc"
+
 _START_SCREEN2WEB_NM_
 
 namespace
@@ -18,8 +21,8 @@ int HttpServer::Init() noexcept
 	server_.Get("/", [](const httplib::Request &req, httplib::Response &res)
 				{ res.set_content(html_code_buf, "text/html"); });
 
-	server_.Get("/GetOneFrame", [&](const httplib::Request& req, httplib::Response& res)
-		{
+	server_.Get("/GetOneFrame", [&](const httplib::Request &req, httplib::Response &res)
+				{
 			Frame frame;
 			{
 				bool isEmpty = false;
@@ -35,13 +38,13 @@ int HttpServer::Init() noexcept
 				::std::lock_guard<::std::mutex> lg(frame_queue_mutex_);
 				frame = frame_queue_.front();
 			}
-			::std::string base64Data = Frame2Base64Encoded(frame);
-			res.set_header("Content-Type", "image/bmp"); // Change "image/jpeg" to the appropriate content type if it's not an image.
+			::std::vector<std::uint8_t> buffer;
+			svpng(buffer, frame.width, frame.height, (const unsigned char *)frame.data, 1);
+			res.set_header("Content-Type", "image/png"); // Change "image/jpeg" to the appropriate content type if it's not an image.
 			res.set_header("Image-Width", ::std::to_string(frame.width));
 			res.set_header("Image-Height", ::std::to_string(frame.height));
-			res.body = ::std::string(frame.data, frame.data + frame.size);
-			res.status = 200;
-		});
+			res.body = ::std::string(buffer.begin(), buffer.end());
+			res.status = 200; });
 
 	return 0;
 }
@@ -49,13 +52,12 @@ int HttpServer::Init() noexcept
 int HttpServer::Listen(const ::std::string &host, int port, int socket_flags) noexcept
 {
 	sv_t_ = ::std::thread([&]()
-						  { 
-			int result = server_.listen(host.c_str(), port, socket_flags);
-		});
+						  { int result = server_.listen(host.c_str(), port, socket_flags); });
 
 	sv_t_.detach();
 
-	scanner_t_ = ::std::thread([this]() {
+	scanner_t_ = ::std::thread([this]()
+							   {
 		for (;;)
 		{
 			if (frame_queue_mutex_.try_lock())
@@ -82,8 +84,7 @@ int HttpServer::Listen(const ::std::string &host, int port, int socket_flags) no
 				}
 			}
 			::std::this_thread::sleep_for(::std::chrono::milliseconds(1000 / 25));
-		}
-		});
+		} });
 
 	scanner_t_.detach();
 

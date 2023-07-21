@@ -46,6 +46,8 @@ include_directories(${SDL2_INCLUDE_DIRS})
 # third party header-only dependencies
 # httplib
 include_directories(${SCREEN2WEB_THIRD_PARTY_DIR}/cpp-httplib)
+# svpng
+include_directories(${SCREEN2WEB_THIRD_PARTY_DIR}/svpng)
 
 add_executable(screen2web ${SRC_FILES})
 
