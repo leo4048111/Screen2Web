@@ -43,7 +43,7 @@ private:
     SDL_GLContext gl_context_{nullptr};
     ::std::string window_name_{"Screen2Web"};
     ::std::string captured_window_name_{window_name_};
-    size_t window_width_{1280}, window_height_{720};
+    size_t window_width_{980}, window_height_{720};
     ::std::vector<::std::string> windownames_;
     ::std::mutex window_mutex_;
     GLuint captured_window_texture_;

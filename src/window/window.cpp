@@ -5,6 +5,7 @@
 #include "imgui_impl_opengl3.h"
 #include <stdio.h>
 #include <thread>
+#include <optional>
 
 #if defined(WIN32)
 #include "winSDIScreencapturerImpl.h"
@@ -16,6 +17,16 @@
 #include "httpserver.h"
 
 _START_SCREEN2WEB_NM_
+
+namespace
+{
+template <typename T, typename... Args>
+auto ImGui_HorizontallyCenterElement(T func, Args &&...args){
+    const float input_width = ImGui::CalcItemWidth();
+    ImGui::SetCursorPosX((ImGui::GetWindowContentRegionWidth() - input_width) / 2.f);
+    return std::invoke(func, ::std::forward<Args>(args)...);
+}
+}
 
 int Window::Init() noexcept
 {
@@ -70,6 +81,7 @@ int Window::Init() noexcept
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
     (void)io;
+    io.IniFilename = nullptr;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
 
@@ -138,7 +150,6 @@ int Window::Loop() noexcept
 {
     ImGuiIO &io = ImGui::GetIO();
     (void)io;
-    io.IniFilename = nullptr;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     while (!done_)
@@ -189,7 +200,7 @@ int Window::DeInit() noexcept
 {
     // Destroy texture
     glDeleteTextures(1, &captured_window_texture_);
-    
+
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();
@@ -222,7 +233,7 @@ void Window::ShowConfigWindow() noexcept
     {
         ::std::lock_guard<::std::mutex> lock(window_mutex_);
         auto combo_preview_value = captured_window_name_; // Pass in the preview value visible before opening the combo (it could be anything)
-        if (ImGui::BeginCombo("Capture window", combo_preview_value.c_str(), flags))
+        if (ImGui_HorizontallyCenterElement(ImGui::BeginCombo, "Capture window", combo_preview_value.c_str(), flags))
         {
             for (int n = 0; n < windownames_.size(); n++)
             {
@@ -261,17 +272,24 @@ void Window::ShowCapturedWindow() noexcept
         if (frame.width > window_width_)
         {
             double ratio = (double)frame.width / frame.height;
-            frame.width = window_width_ - 100;
+            frame.width = window_width_;
             frame.height = frame.width / ratio;
         }
-        else if (frame.height > window_height_)
+
+        if (frame.height > window_height_)
         {
             double ratio = (double)frame.height / frame.width;
             frame.height = window_height_ - 100;
             frame.width = frame.height / ratio;
         }
-
-        ImGui::Image((void *)(intptr_t)captured_window_texture_, ImVec2(frame.width, frame.height));
+        ImGui::BeginChild("Captured window", ImVec2(window_width_, window_height_ - 100), true);
+        // This centering has to be done manually because ImGui::CalcItemWidth() cannot get correct image width
+        const float padding = (ImGui::GetWindowContentRegionWidth() - frame.width) / 2.0f;
+        ImGui::SetCursorPosX(padding);
+        ImGui::Image(
+            (void*)(intptr_t)captured_window_texture_,
+            ImVec2(frame.width, frame.height));
+        ImGui::EndChild();
     }
 }
 
