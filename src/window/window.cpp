@@ -98,6 +98,19 @@ int Window::Init() noexcept
     // ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, nullptr, io.Fonts->GetGlyphRangesJapanese());
     // IM_ASSERT(font != nullptr);
 
+    // Init textures
+    glGenTextures(1, &captured_window_texture_);
+    glBindTexture(GL_TEXTURE_2D, captured_window_texture_);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_MIN_FILTER,
+                    GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_MAG_FILTER,
+                    GL_LINEAR);
+    // glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+
     done_ = false;
 
     get_windows_t_ = ::std::thread([&]()
@@ -167,9 +180,6 @@ int Window::Loop() noexcept
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         SDL_GL_SwapWindow(window_);
-
-        // cleanup
-        glDeleteTextures(1, &captured_window_texture_);
     }
 
     return 0;
@@ -177,6 +187,9 @@ int Window::Loop() noexcept
 
 int Window::DeInit() noexcept
 {
+    // Destroy texture
+    glDeleteTextures(1, &captured_window_texture_);
+    
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();
@@ -236,17 +249,6 @@ void Window::ShowCapturedWindow() noexcept
             return;
 
         HttpServer::GetInstance().PushFrame(frame);
-        glGenTextures(1, &captured_window_texture_);
-        glBindTexture(GL_TEXTURE_2D, captured_window_texture_);
-        glTexParameteri(GL_TEXTURE_2D,
-                        GL_TEXTURE_MIN_FILTER,
-                        GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D,
-                        GL_TEXTURE_MAG_FILTER,
-                        GL_LINEAR);
-        // glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexImage2D(GL_TEXTURE_2D,
                      0,
                      GL_RGBA,
