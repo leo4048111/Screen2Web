@@ -10,12 +10,23 @@ A live screen sharing server implemented with cpp-httplib and ImGui, enabling sh
 + Installed OpenGL and SDL2 libraries
 + Cmake
 
-## Platforms
+## Platforms & Building
 
 + **Windows**
+```
+mkdir build
+cd build
+cmake .. -G "MinGW Makefiles"
+make
+```
 + **MacOS** (Developing)
+```
+MacOS features are still developing
+```
 + **Linux** (Developing)
-
+```
+Linux features are still developing
+```
 ## Usage
 
 + Build this project
